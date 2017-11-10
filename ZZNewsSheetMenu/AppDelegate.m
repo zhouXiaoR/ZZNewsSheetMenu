@@ -16,7 +16,8 @@
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-   
+   //UIScrollView
+   // UILongPressGestureRecognize
     // Override point for customization after application launch.
     return YES;
 }
