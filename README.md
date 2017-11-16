@@ -4,7 +4,7 @@
 UIScrollView，UILongPressGestureRecognize，动画
 
 # 效果
-![](Untitled1.gif)
+![](Untitled2.gif)
 
 
 # 1.2版本更新
