@@ -7,6 +7,8 @@
 //
 
 #import "ZZNewsSheetItem.h"
+#import "ZZNewsSheetConfig.h"
+static NSTimeInterval const kAnimationItemDuration = 0.25f;
 
 @interface ZZNewsSheetItem()
 @property(nonatomic,weak)UIButton *closeButton;
@@ -29,8 +31,9 @@
 
 - (void)layoutSubviews{
     [super layoutSubviews];
-    CGFloat buttonWidth = 20;
-    CGFloat buttonHeight =20;
+    CGSize size = [ZZNewsSheetConfig defaultCofing].sheetItemSize;
+    CGFloat buttonWidth = size.width / 3.0;
+    CGFloat buttonHeight = size.width / 3.0;
     self.closeButton.frame = CGRectMake(self.frame.size.width - 0.8 * buttonWidth, -0.3 * buttonWidth, buttonWidth, buttonHeight);
     self.closeButton.layer.cornerRadius = buttonWidth / 2.0f;
     self.itemTitleLab.frame = CGRectMake(0, 0, self.bounds.size.width, self.bounds.size.height);
@@ -42,6 +45,17 @@
     if (flagType == ZZCornerFlagTypeNone) {
         self.closeButton.hidden = YES;
         return;
+    }
+    
+     BOOL isShakeAnimation = [ZZNewsSheetConfig defaultCofing].isShakeAnimation;
+    if (self.flagType == ZZCornerFlagTypeDelete) {
+        if (isShakeAnimation) {
+            [self startShakeAnimation];
+        }
+    }else{
+        if (isShakeAnimation) {
+             [self removeAnimation];
+        }
     }
     
     NSString * title = self.cornerFlagDictionary[[NSString stringWithFormat:@"%d",(int)flagType]];
@@ -65,21 +79,51 @@
 }
 
 - (void)commintAnimation:(BOOL)hidden{
-    // self.closeButton.hidden = cornerFlagHidden;
+    BOOL isShakeAnimation = [ZZNewsSheetConfig defaultCofing].isShakeAnimation;
+    NSTimeInterval animationDuration = isShakeAnimation ? kAnimationItemDuration : 0.0f;
     if (hidden) {
-        [UIView animateWithDuration:0.15 animations:^{
+        [UIView animateWithDuration:animationDuration animations:^{
             self.closeButton.alpha = 0.0f;
+        } completion:^(BOOL finished) {
+            if (isShakeAnimation) {
+                 [self removeAnimation];
+            }
         }];
     }else{
-        [UIView animateWithDuration:0.15 animations:^{
+        [UIView animateWithDuration:animationDuration animations:^{
             self.closeButton.alpha = 1.0f;
+        } completion:^(BOOL finished) {
+            if (self.flagType == ZZCornerFlagTypeDelete) {
+                if (isShakeAnimation) {
+                     [self startShakeAnimation];
+                }
+            }
         }];
     }
 }
 
+- (void)removeAnimation{
+    [self.layer removeAllAnimations];
+}
+
+- (void)startShakeAnimation{
+    CAKeyframeAnimation *shakeAnimation = [CAKeyframeAnimation animationWithKeyPath:@"transform.rotation"];
+    shakeAnimation.values = @[@(-0.06),@0.06,@(-0.06)];
+    
+    CGFloat timeArc = (arc4random() % 9 + 1 ) * 0.01;
+    shakeAnimation.timeOffset = [self.layer convertTime:CACurrentMediaTime()+timeArc 
+                                                toLayer:nil];
+    
+    shakeAnimation.duration = 0.2f;
+    shakeAnimation.fillMode = kCAFillModeForwards;
+    shakeAnimation.repeatCount = HUGE_VAL;
+    shakeAnimation.removedOnCompletion = NO;
+    [self.layer addAnimation:shakeAnimation forKey:@"shake"];
+}
+
 #pragma mark - SetUp
 - (void)defaultConfig{
-    self.backgroundColor = [UIColor whiteColor];
+    self.backgroundColor = [ZZNewsSheetConfig defaultCofing].sheetBackgroundColor;
     self.layer.cornerRadius = 4.0f;
 }
 - (void)setUp{
@@ -90,8 +134,8 @@
 }
 - (void)addTipsLab{
     UILabel *tLab = [[UILabel alloc]init];
-    tLab.textColor = [UIColor whiteColor];
-    tLab.font = [UIFont systemFontOfSize:10];
+    tLab.textColor = [ZZNewsSheetConfig defaultCofing].sheetItemTitleColor;
+    tLab.font = [ZZNewsSheetConfig defaultCofing].sheetItemFont;
     tLab.textAlignment = NSTextAlignmentCenter;
     [self addSubview:tLab];
     self.itemTitleLab = tLab;
@@ -104,7 +148,7 @@
     [closeButton addTarget:self action:@selector(zz_close) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:closeButton];
     self.closeButton = closeButton;
-    closeButton.backgroundColor = [UIColor grayColor];
+    closeButton.backgroundColor = [ZZNewsSheetConfig defaultCofing].closeBackgroundColor;
 }
 
 - (void)addLongPanGesture{

@@ -141,7 +141,6 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
     [self.mySubjectItemArray removeAllObjects];
     for (int i = 0; i<self.mySubjectArray.count; i++) {
         ZZNewsSheetItem *item = [[ZZNewsSheetItem alloc]init];
-        item.backgroundColor = [UIColor lightGrayColor];
         item.itemTitle = self.mySubjectArray[i];
         item.flagType = ZZCornerFlagTypeDelete;
         [mySubjectView addSubview:item];
@@ -169,7 +168,6 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
     [self.recommendSubjectItemArray removeAllObjects];
     for (int i = 0; i<self.recommendSubjectArray.count; i++) {
         ZZNewsSheetItem *item = [[ZZNewsSheetItem alloc]init];
-        item.backgroundColor = [UIColor lightGrayColor];
         item.itemTitle = self.recommendSubjectArray[i];
         item.longGestureEnable = NO;
         item.flagType = ZZCornerFlagTypeAddition;
@@ -206,7 +204,16 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
         [self moveItemFromRecommendToMySubject:item];
     }
     
-    [UIView animateWithDuration:kAnimationDuration animations:^{
+    if ([ZZNewsSheetConfig defaultCofing].isHiddenWhenHasNoneRecomment) {
+          self.recommentTitleLab.hidden = !self.recommendSubjectArray.count;
+    }
+    
+    CGFloat animationDuration = kAnimationDuration;
+    if (self.mySubjectArray.count <= 0 || self.recommendSubjectArray.count <= 0) {
+        animationDuration =0.0f;
+    }
+    
+    [UIView animateWithDuration:animationDuration animations:^{
         [self updateAllView];
     }];
 }
@@ -243,42 +250,44 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
 }
 
 - (void)setUpGrimViews{
-    CGFloat marginScreen = 10.0f;
-    NSInteger column = 4;
-    CGFloat marginItem = 10.0f;
-    CGFloat itemHeight = 35.0f;
+    CGSize size = [ZZNewsSheetConfig defaultCofing].sheetItemSize;
+    NSInteger column = [ZZNewsSheetConfig defaultCofing].sheetMaxColumn;
+    CGFloat margin = 1.0 * (KScreenWidth - size.width * column)/(column + 1);
+    CGFloat itemHeight = size.height;
     CGFloat titleHeight = 30.0f;
-    CGFloat itemWidth = 1.0*(KScreenWidth - 2*marginScreen - (column - 1)*marginItem)/column;
+    CGFloat itemWidth = size.width;
+    
     [self.mySubjectItemArray enumerateObjectsUsingBlock:^(ZZNewsSheetItem *  _Nonnull obj, NSUInteger i, BOOL * _Nonnull stop) {
         NSInteger currentRow = i / column ;
         NSInteger currentColumn = i % column;
-        CGFloat orx = marginScreen + currentColumn *marginItem + currentColumn*itemWidth;
-        CGFloat ory =titleHeight + marginScreen + currentRow*marginItem + currentRow*itemHeight;
+        CGFloat orx = margin + currentColumn *margin + currentColumn*itemWidth;
+        CGFloat ory =titleHeight + margin + currentRow*margin + currentRow*itemHeight;
          obj.frame = CGRectMake(orx, ory, itemWidth, itemHeight);
     }];
 }
 
 - (void)updateAllView{
-    CGFloat marginScreen = 10.0f;
-    NSInteger column = 4;
-    CGFloat marginItem = 10.0f;
-    CGFloat itemHeight = 35.0f;
     
+    CGSize size = [ZZNewsSheetConfig defaultCofing].sheetItemSize;
+    NSInteger column = [ZZNewsSheetConfig defaultCofing].sheetMaxColumn;
+    CGFloat margin = 1.0 * (KScreenWidth - size.width * column)/(column + 1);
+    CGFloat itemHeight = size.height;
     CGFloat titleHeight = 30.0f;
-    self.myTitleLab.frame = CGRectMake(marginScreen, 0,KScreenWidth-2*marginScreen, titleHeight);
-    CGFloat itemWidth = 1.0*(KScreenWidth - 2*marginScreen - (column - 1)*marginItem)/column;
+    CGFloat itemWidth = size.width;
+
+    self.myTitleLab.frame = CGRectMake(margin, 0,KScreenWidth-2*margin, titleHeight);
     CGFloat mySubRow = (self.mySubjectItemArray.count-1) / column + 1;
     mySubRow = MAX(mySubRow, 0);
     for (NSInteger i = 0;i<self.mySubjectItemArray.count;i++) {
         ZZNewsSheetItem *item = self.mySubjectItemArray[i];
         NSInteger currentRow = i / column ;
         NSInteger currentColumn = i % column;
-        CGFloat orx = marginScreen + currentColumn *marginItem + currentColumn*itemWidth;
-        CGFloat ory = titleHeight + marginScreen + currentRow*marginItem + currentRow*itemHeight;
+        CGFloat orx = margin + currentColumn *margin + currentColumn*itemWidth;
+        CGFloat ory = titleHeight + margin + currentRow*margin + currentRow*itemHeight;
         item.frame = CGRectMake(orx, ory, itemWidth, itemHeight);
     }
 
-    CGFloat mySubHeight = titleHeight + 2 * marginScreen + mySubRow * itemHeight + marginItem * (mySubRow - 1);
+    CGFloat mySubHeight = titleHeight + 2 * margin + mySubRow * itemHeight + margin * (mySubRow - 1);
     self.mySubjectView.frame = CGRectMake(0,CGRectGetMaxY(self.menuNavitem.frame), KScreenWidth, mySubHeight);
     if (self.mySubjectItemArray.count <= 0) {
         mySubHeight = 0.0f;
@@ -292,17 +301,17 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
         ZZNewsSheetItem *item = self.recommendSubjectItemArray[i];
         NSInteger currentRow = i / column ;
         NSInteger currentColumn = i % column;
-        CGFloat orx = marginScreen + currentColumn *marginItem + currentColumn*itemWidth;
-        CGFloat ory =titleHeight + marginScreen + currentRow*marginItem + currentRow*itemHeight;
+        CGFloat orx = margin + currentColumn *margin + currentColumn*itemWidth;
+        CGFloat ory =titleHeight + margin + currentRow*margin + currentRow*itemHeight;
         item.frame = CGRectMake(orx, ory, itemWidth, itemHeight);
     }
-    CGFloat recSubHeight =titleHeight + 2 * marginScreen+ recSubRow * itemHeight + marginItem * (recSubRow - 1);
+    CGFloat recSubHeight =titleHeight + 2 * margin+ recSubRow * itemHeight + margin * (recSubRow - 1);
     self.recommentTitleLab.frame = self.myTitleLab.frame;
     CGFloat recOry = CGRectGetMaxY(self.mySubjectView.frame);
     self.recommendSubjectView.frame = CGRectMake(0, recOry, KScreenWidth, recSubHeight);
     if (self.recommendSubjectItemArray.count <= 0) {
-        recSubHeight = 0.0f;
-        self.recommendSubjectView.frame = CGRectZero;
+        recSubHeight = titleHeight;
+        self.recommendSubjectView.frame = CGRectMake(0, recOry, KScreenWidth, titleHeight);
     }
     
     CGFloat scHeight = CGRectGetMaxY(self.recommendSubjectView.frame);
@@ -392,6 +401,7 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
         [self.mySubjectView bringSubviewToFront:item];
         [self.newsSheetScrollView bringSubviewToFront:self.mySubjectView];
         item.transform = CGAffineTransformMakeScale(1.2, 1.2);
+        item.alpha = 0.8f;
         _lastPoint = point;
         _currentItem = item;
         NSInteger index = [self.mySubjectItemArray indexOfObject:item];
@@ -404,6 +414,14 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
     tempFrame.origin.y += point.y - _lastPoint.y;
     item.frame = tempFrame;
     _lastPoint = point;
+    
+    CGPoint bPoint = [gesture locationInView:self.recommendSubjectView];
+    if (CGRectContainsPoint(self.recommendSubjectView.bounds, bPoint)) {
+        [self caculatorEndPositon];
+        [self updateMoveItem:item];
+        return;
+    }
+    
     
     [self.mySubjectItemArray enumerateObjectsUsingBlock:^(ZZNewsSheetItem *  _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
         if (CGRectContainsPoint(obj.frame, point) && obj != item) {
@@ -430,10 +448,25 @@ static NSTimeInterval const kAnimationDuration = 0.25f;
    
     [UIView animateWithDuration:kAnimationDuration animations:^{
         _currentItem.transform = CGAffineTransformIdentity;
+        _currentItem.alpha = 1.0f;
         [self setUpGrimViews];
     } completion:^(BOOL finished) {
         _currentItem = nil;
         _lastPoint = CGPointZero;
     }];
+}
+
+
+-(void)updateNewSheetConfig:(newsSheetBlock)block{
+    ZZNewsSheetConfig *cofig = [ZZNewsSheetConfig defaultCofing];
+    if (block) {
+         block(cofig);
+    }
+
+    [self.newsSheetScrollView.subviews sortedArrayUsingSelector:@selector(removeFromSuperview)];
+     [self setUp];
+    
+    [self setNeedsLayout];
+    [self layoutIfNeeded];
 }
 @end

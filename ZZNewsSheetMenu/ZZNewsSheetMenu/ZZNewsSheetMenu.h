@@ -7,6 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ZZNewsSheetConfig.h"
+
+ typedef   void(^newsSheetBlock)(ZZNewsSheetConfig *);
 
 @interface ZZNewsSheetMenu : UIView
 
@@ -18,4 +21,7 @@
 
 -(void)showNewsMenu;
 - (void)dismissNewsMenu;
+
+-(void)updateNewSheetConfig:(newsSheetBlock)block;
+
 @end
